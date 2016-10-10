@@ -16,6 +16,7 @@
 #import "TSSocketManager.h"
 #import "TextSecureKitEnv.h"
 #import "VersionMigrations.h"
+#import <PastelogKit/Pastelog.h>
 #import <SignalServiceKit/OWSDisappearingMessagesJob.h>
 #import <SignalServiceKit/OWSIncomingMessageReadObserver.h>
 #import <SignalServiceKit/OWSMessageSender.h>
@@ -101,6 +102,7 @@ static NSString *const kURLHostVerifyPrefix             = @"verify";
 
     [self prepareScreenProtection];
 
+
     // Avoid blocking app launch by putting all possible DB access in async thread.
     UIApplicationState launchState = application.applicationState;
     [TSAccountManager runIfRegistered:^{
@@ -119,9 +121,16 @@ static NSString *const kURLHostVerifyPrefix             = @"verify";
 
         // Clean up any messages that expired since last launch.
         [[[OWSDisappearingMessagesJob alloc] initWithStorageManager:[TSStorageManager sharedManager]] run];
+        [AppStoreRating setupRatingLibrary];
     }];
 
-    [AppStoreRating setupRatingLibrary];
+    [TSAccountManager runIfNotRegistered:^{
+        UITapGestureRecognizer *debugGesture =
+            [[UITapGestureRecognizer alloc] initWithTarget:[Pastelog class] action:@selector(submitLogs)];
+        debugGesture.numberOfTapsRequired = 8;
+        [self.window addGestureRecognizer:debugGesture];
+    }];
+
     return YES;
 }
 

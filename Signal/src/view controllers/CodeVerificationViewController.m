@@ -54,48 +54,78 @@
     [self enableServerActions:NO];
     [_challengeTextField resignFirstResponder];
 
+    NSError *error;
+    [self validateChallengeTextFieldWithError:&error];
+    if (error) {
+        [self presentAlertWithVerificationError:error];
+    }
+
+
     [self registerWithSuccess:^{
-      [_submitCodeSpinner stopAnimating];
+        [_submitCodeSpinner stopAnimating];
 
-      dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-        [TSAccountManager didRegister];
-        dispatch_async(dispatch_get_main_queue(), ^{
-          [self.navigationController
-              dismissViewControllerAnimated:YES
-                                 completion:^{
-                                   if (ABAddressBookGetAuthorizationStatus() == kABAuthorizationStatusNotDetermined ||
-                                       ABAddressBookGetAuthorizationStatus() == kABAuthorizationStatusRestricted) {
-                                       UIAlertController *controller = [UIAlertController
-                                           alertControllerWithTitle:NSLocalizedString(@"REGISTER_CONTACTS_WELCOME", nil)
-                                                            message:NSLocalizedString(@"REGISTER_CONTACTS_BODY", nil)
-                                                     preferredStyle:UIAlertControllerStyleAlert];
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+            [TSAccountManager didRegister];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.navigationController
+                    dismissViewControllerAnimated:YES
+                                       completion:^{
+                                           if (ABAddressBookGetAuthorizationStatus()
+                                                   == kABAuthorizationStatusNotDetermined
+                                               || ABAddressBookGetAuthorizationStatus()
+                                                   == kABAuthorizationStatusRestricted) {
+                                               UIAlertController *controller = [UIAlertController
+                                                   alertControllerWithTitle:NSLocalizedString(
+                                                                                @"REGISTER_CONTACTS_WELCOME", nil)
+                                                                    message:NSLocalizedString(
+                                                                                @"REGISTER_CONTACTS_BODY", nil)
+                                                             preferredStyle:UIAlertControllerStyleAlert];
 
-                                       [controller addAction:[UIAlertAction
+                                               [controller
+                                                   addAction:[UIAlertAction
                                                                  actionWithTitle:NSLocalizedString(
                                                                                      @"REGISTER_CONTACTS_CONTINUE", nil)
-                                                                           style:UIAlertActionStyleDefault
+                                                                           style:UIAlertActionStyleCancel
                                                                          handler:^(UIAlertAction *action) {
-                                                                           [self setupContacts];
+                                                                             [self setupContacts];
                                                                          }]];
 
-                                       [[UIApplication sharedApplication]
-                                               .keyWindow.rootViewController presentViewController:controller
-                                                                                          animated:YES
-                                                                                        completion:nil];
+                                               [[UIApplication sharedApplication].keyWindow.rootViewController
+                                                   presentViewController:controller
+                                                                animated:YES
+                                                              completion:nil];
 
-                                   } else {
-                                       [self setupContacts];
-                                   }
+                                           } else {
+                                               [self setupContacts];
+                                           }
 
-                                 }];
+                                       }];
+            });
         });
-      });
     }
         failure:^(NSError *error) {
-          [self enableServerActions:YES];
-          [_submitCodeSpinner stopAnimating];
-          DDLogError(@"Error: %@", error.localizedDescription);
+            [self presentAlertWithVerificationError:error];
+            DDLogError(@"%@ error verifying challenge: %@", self.tag, error);
         }];
+}
+
+- (void)presentAlertWithVerificationError:(NSError *)error
+{
+    UIAlertController *alertController = [UIAlertController
+                                          alertControllerWithTitle:NSLocalizedString(@"VERIFICATION_FAILED_TITLE", @"Alert view title")
+                                          message:error.localizedDescription
+                                          preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *dismissAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"DISMISS_BUTTON_TEXT", nil)
+                                                            style:UIAlertActionStyleDefault
+                                                          handler:nil];
+    [alertController addAction:dismissAction];
+
+    [self presentViewController:alertController
+                       animated:YES
+                     completion:^{
+                         [self enableServerActions:YES];
+                         [_submitCodeSpinner stopAnimating];
+                     }];
 }
 
 - (void)setupContacts {
@@ -170,7 +200,6 @@
     }];
 }
 
-
 - (TOCFuture *)getRPRegistrationToken {
     TOCFutureSource *redPhoneTokenFuture = [[TOCFutureSource alloc] init];
 
@@ -208,13 +237,15 @@
 
     [_requestCodeAgainSpinner startAnimating];
     [TSAccountManager rerequestSMSWithSuccess:^{
-      [self enableServerActions:YES];
-      [_requestCodeAgainSpinner stopAnimating];
+        DDLogInfo(@"%@ Successfully requested SMS code", self.tag);
+        [self enableServerActions:YES];
+        [_requestCodeAgainSpinner stopAnimating];
     }
         failure:^(NSError *error) {
-          [self showRegistrationErrorMessage:error];
-          [self enableServerActions:YES];
-          [_requestCodeAgainSpinner stopAnimating];
+            DDLogError(@"%@ Failed to request SMS code with error: %@", self.tag, error);
+            [self showRegistrationErrorMessage:error];
+            [self enableServerActions:YES];
+            [_requestCodeAgainSpinner stopAnimating];
         }];
 }
 
@@ -223,13 +254,16 @@
 
     [_requestCallSpinner startAnimating];
     [TSAccountManager rerequestVoiceWithSuccess:^{
-      [self enableServerActions:YES];
-      [_requestCallSpinner stopAnimating];
+        DDLogInfo(@"%@ Successfully requested voice code", self.tag);
+
+        [self enableServerActions:YES];
+        [_requestCallSpinner stopAnimating];
     }
         failure:^(NSError *error) {
-          [self showRegistrationErrorMessage:error];
-          [self enableServerActions:YES];
-          [_requestCallSpinner stopAnimating];
+            DDLogError(@"%@ Failed to request voice code with error: %@", self.tag, error);
+            [self showRegistrationErrorMessage:error];
+            [self enableServerActions:YES];
+            [_requestCallSpinner stopAnimating];
         }];
 }
 
@@ -301,6 +335,18 @@
     }
 
     _headerConstraint.constant = blueHeaderHeight;
+}
+
+#pragma mark - Logging
+
++ (NSString *)tag
+{
+    return [NSString stringWithFormat:@"[%@]", self.class];
+}
+
+- (NSString *)tag
+{
+    return self.class.tag;
 }
 
 @end

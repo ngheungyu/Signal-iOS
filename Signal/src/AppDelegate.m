@@ -21,7 +21,9 @@
 #import <SignalServiceKit/OWSIncomingMessageReadObserver.h>
 #import <SignalServiceKit/OWSMessageSender.h>
 
-static NSString *const kStoryboardName                  = @"Storyboard";
+static NSString *const AppDelegateStoryboardMain = @"Main";
+static NSString *const AppDelegateStoryboardRegistration = @"Registration";
+
 static NSString *const kInitialViewControllerIdentifier = @"UserInitialViewController";
 static NSString *const kURLSchemeSGNLKey                = @"sgnl";
 static NSString *const kURLHostVerifyPrefix             = @"verify";
@@ -81,13 +83,15 @@ static NSString *const kURLHostVerifyPrefix             = @"verify";
 
     [self setupTSKitEnv];
 
-    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:kStoryboardName bundle:[NSBundle mainBundle]];
-    UIViewController *viewController =
-        [storyboard instantiateViewControllerWithIdentifier:kInitialViewControllerIdentifier];
+    UIStoryboard *storyboard;
+    if ([TSAccountManager isRegistered]) {
+        storyboard = [UIStoryboard storyboardWithName:AppDelegateStoryboardMain bundle:[NSBundle mainBundle]];
+    } else {
+        storyboard = [UIStoryboard storyboardWithName:AppDelegateStoryboardRegistration bundle:[NSBundle mainBundle]];
+    }
+    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
 
-    self.window                    = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    self.window.rootViewController = viewController;
-
+    self.window.rootViewController = [storyboard instantiateInitialViewController];
     [self.window makeKeyAndVisible];
 
     [VersionMigrations performUpdateCheck]; // this call must be made after environment has been initialized because in
@@ -102,10 +106,9 @@ static NSString *const kURLHostVerifyPrefix             = @"verify";
 
     [self prepareScreenProtection];
 
-
     // Avoid blocking app launch by putting all possible DB access in async thread.
     UIApplicationState launchState = application.applicationState;
-    [TSAccountManager runIfRegistered:^{
+    [TSAccountManager runAsyncIfRegistered:^{
         if (launchState == UIApplicationStateInactive) {
             DDLogWarn(@"The app was launched from inactive");
             [TSSocketManager becomeActiveFromForeground];
@@ -124,11 +127,13 @@ static NSString *const kURLHostVerifyPrefix             = @"verify";
         [AppStoreRating setupRatingLibrary];
     }];
 
-    [TSAccountManager runIfNotRegistered:^{
-        UITapGestureRecognizer *debugGesture =
-            [[UITapGestureRecognizer alloc] initWithTarget:[Pastelog class] action:@selector(submitLogs)];
-        debugGesture.numberOfTapsRequired = 8;
-        [self.window addGestureRecognizer:debugGesture];
+    [TSAccountManager runAsyncIfNotRegistered:^{
+        dispatch_async(dispatch_get_main_queue(), ^{
+            UITapGestureRecognizer *debugGesture =
+                [[UITapGestureRecognizer alloc] initWithTarget:[Pastelog class] action:@selector(submitLogs)];
+            debugGesture.numberOfTapsRequired = 8;
+            [self.window addGestureRecognizer:debugGesture];
+        });
     }];
 
     return YES;
@@ -211,7 +216,7 @@ static NSString *const kURLHostVerifyPrefix             = @"verify";
         return;
     }
 
-    [TSAccountManager runIfRegistered:^{
+    [TSAccountManager runAsyncIfRegistered:^{
         // We're double checking that the app is active, to be sure since we can't verify in production env due to code
         // signing.
         [TSSocketManager becomeActiveFromForeground];

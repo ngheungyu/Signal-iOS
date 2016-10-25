@@ -29,8 +29,6 @@
 #define CELL_HEIGHT 72.0f
 #define HEADER_HEIGHT 44.0f
 
-static NSString *const kShowSignupFlowSegue = @"showSignupFlow";
-
 @interface SignalsViewController ()
 
 @property (nonatomic, strong) YapDatabaseConnection *editingDbConnection;
@@ -183,8 +181,37 @@ static NSString *const kShowSignupFlowSegue = @"showSignupFlow";
 
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
-    if (![TSAccountManager isRegistered]) {
-        [self performSegueWithIdentifier:kShowSignupFlowSegue sender:self];
+    if (self.newlyRegisteredUser) {
+        [self didAppearForNewlyRegisteredUser];
+    }
+}
+
+- (void)didAppearForNewlyRegisteredUser
+{
+    ABAuthorizationStatus status = ABAddressBookGetAuthorizationStatus();
+    switch (status) {
+        case kABAuthorizationStatusNotDetermined:
+        case kABAuthorizationStatusRestricted: {
+            UIAlertController *controller =
+                [UIAlertController alertControllerWithTitle:NSLocalizedString(@"REGISTER_CONTACTS_WELCOME", nil)
+                                                    message:NSLocalizedString(@"REGISTER_CONTACTS_BODY", nil)
+                                             preferredStyle:UIAlertControllerStyleAlert];
+
+            [controller
+                addAction:[UIAlertAction
+                              actionWithTitle:NSLocalizedString(@"REGISTER_CONTACTS_CONTINUE", nil)
+                                        style:UIAlertActionStyleCancel
+                                      handler:^(UIAlertAction *action) {
+                                          [[Environment getCurrent].contactsManager doAfterEnvironmentInitSetup];
+                                      }]];
+
+            [self presentViewController:controller animated:YES completion:nil];
+            break;
+        }
+        default: {
+            [[Environment getCurrent].contactsManager doAfterEnvironmentInitSetup];
+            break;
+        }
     }
 }
 

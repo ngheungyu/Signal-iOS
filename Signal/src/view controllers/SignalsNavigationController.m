@@ -7,8 +7,11 @@
 //
 
 #import "SignalsNavigationController.h"
-
+#import "AddressBook/ABAddressBook.h"
+#import "Environment.h"
+#import "OWSContactsManager.h"
 #import "UIUtil.h"
+#import <UIKit/UIKit.h>
 
 @interface SignalsNavigationController ()
 
@@ -93,6 +96,5 @@ static double const STALLED_PROGRESS = 0.9;
 - (void)socketIsConnecting {
     // Nothing to see here currently
 }
-
 
 @end

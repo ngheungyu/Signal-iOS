@@ -7,15 +7,13 @@
 //
 
 #import "CodeVerificationViewController.h"
-
+#import "SignalsNavigationController.h"
+#import "SignalsViewController.h"
+#import <SignalServiceKit/OWSError.h>
+#import <SignalServiceKit/TSAccountManager.h>
 #import <SignalServiceKit/TSStorageManager+keyingMaterial.h>
-#import "OWSContactsManager.h"
-#import "Environment.h"
-#import "LocalizableText.h"
-#import "PushManager.h"
-#import "RPAccountManager.h"
-#import "RPServerRequestsManager.h"
-#import "TSAccountManager.h"
+
+NSString *const kCompletedRegistrationSegue = @"CompletedRegistration";
 
 @interface CodeVerificationViewController ()
 
@@ -42,6 +40,15 @@
         forState:UIControlStateNormal];
 }
 
+- (nullable NSError *)validateChallengeTextField
+{
+    if ([self validationCodeFromTextField].length == 0) {
+        return OWSErrorWithCodeDescription(OWSErrorCodeUserError,
+            NSLocalizedString(@"REGISTRATION_ERROR_BLANK_VERIFICATION_CODE", @"alert body during registration"));
+    }
+    return nil;
+}
+
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     [self enableServerActions:YES];
@@ -50,61 +57,45 @@
     [self adjustScreenSizes];
 }
 
-- (IBAction)verifyChallengeAction:(id)sender {
+- (void)startActivityIndicator
+{
+    [self.submitCodeSpinner startAnimating];
     [self enableServerActions:NO];
     [_challengeTextField resignFirstResponder];
+}
 
-    NSError *error;
-    [self validateChallengeTextFieldWithError:&error];
-    if (error) {
-        [self presentAlertWithVerificationError:error];
+- (void)stopActivityIndicator
+{
+    [self enableServerActions:YES];
+    [self.submitCodeSpinner stopAnimating];
+}
+
+- (IBAction)verifyChallengeAction:(id)sender
+{
+    [self startActivityIndicator];
+
+    NSError *validationError = [self validateChallengeTextField];
+    if (validationError) {
+        [self stopActivityIndicator];
+        DDLogWarn(@"%@ Failed with validation error: %@", self.tag, validationError);
+        [self presentAlertWithVerificationError:validationError];
+        return;
     }
 
-
-    [self registerWithSuccess:^{
-        [_submitCodeSpinner stopAnimating];
-
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-            [TSAccountManager didRegister];
+    [self.submitCodeSpinner startAnimating];
+    [TSAccountManager verifyAccountWithCode:[self validationCodeFromTextField]
+        success:^{
             dispatch_async(dispatch_get_main_queue(), ^{
-                [self.navigationController
-                    dismissViewControllerAnimated:YES
-                                       completion:^{
-                                           if (ABAddressBookGetAuthorizationStatus()
-                                                   == kABAuthorizationStatusNotDetermined
-                                               || ABAddressBookGetAuthorizationStatus()
-                                                   == kABAuthorizationStatusRestricted) {
-                                               UIAlertController *controller = [UIAlertController
-                                                   alertControllerWithTitle:NSLocalizedString(
-                                                                                @"REGISTER_CONTACTS_WELCOME", nil)
-                                                                    message:NSLocalizedString(
-                                                                                @"REGISTER_CONTACTS_BODY", nil)
-                                                             preferredStyle:UIAlertControllerStyleAlert];
-
-                                               [controller
-                                                   addAction:[UIAlertAction
-                                                                 actionWithTitle:NSLocalizedString(
-                                                                                     @"REGISTER_CONTACTS_CONTINUE", nil)
-                                                                           style:UIAlertActionStyleCancel
-                                                                         handler:^(UIAlertAction *action) {
-                                                                             [self setupContacts];
-                                                                         }]];
-
-                                               [[UIApplication sharedApplication].keyWindow.rootViewController
-                                                   presentViewController:controller
-                                                                animated:YES
-                                                              completion:nil];
-
-                                           } else {
-                                               [self setupContacts];
-                                           }
-
-                                       }];
+                [self stopActivityIndicator];
+                [self performSegueWithIdentifier:kCompletedRegistrationSegue sender:nil];
             });
-        });
-    }
+        }
         failure:^(NSError *error) {
-            [self presentAlertWithVerificationError:error];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self stopActivityIndicator];
+                [self presentAlertWithVerificationError:error];
+
+            });
             DDLogError(@"%@ error verifying challenge: %@", self.tag, error);
         }];
 }
@@ -112,124 +103,92 @@
 - (void)presentAlertWithVerificationError:(NSError *)error
 {
     UIAlertController *alertController = [UIAlertController
-                                          alertControllerWithTitle:NSLocalizedString(@"VERIFICATION_FAILED_TITLE", @"Alert view title")
-                                          message:error.localizedDescription
-                                          preferredStyle:UIAlertControllerStyleAlert];
+        alertControllerWithTitle:NSLocalizedString(@"REGISTRATION_VERIFICATION_FAILED_TITLE", @"Alert view title")
+                         message:error.localizedDescription
+                  preferredStyle:UIAlertControllerStyleAlert];
     UIAlertAction *dismissAction = [UIAlertAction actionWithTitle:NSLocalizedString(@"DISMISS_BUTTON_TEXT", nil)
                                                             style:UIAlertActionStyleDefault
                                                           handler:nil];
     [alertController addAction:dismissAction];
 
-    [self presentViewController:alertController
-                       animated:YES
-                     completion:^{
-                         [self enableServerActions:YES];
-                         [_submitCodeSpinner stopAnimating];
-                     }];
-}
-
-- (void)setupContacts {
-    [[Environment getCurrent].contactsManager doAfterEnvironmentInitSetup];
+    [self presentViewController:alertController animated:YES completion:nil];
 }
 
 - (NSString *)validationCodeFromTextField {
     return [_challengeTextField.text stringByReplacingOccurrencesOfString:@"-" withString:@""];
 }
 
-- (TOCFuture *)pushRegistration {
-    TOCFutureSource *pushAndRegisterFuture = [[TOCFutureSource alloc] init];
-
-    [[PushManager sharedManager] validateUserNotificationSettings];
-    [[PushManager sharedManager] requestPushTokenWithSuccess:^(NSString *pushToken, NSString *voipToken) {
-      NSMutableArray *pushTokens = [NSMutableArray arrayWithObject:pushToken];
-
-      if (voipToken) {
-          [pushTokens addObject:voipToken];
-      }
-
-      [pushAndRegisterFuture trySetResult:pushTokens];
-    }
-        failure:^(NSError *error) {
-          [pushAndRegisterFuture trySetFailure:error];
-        }];
-
-    return pushAndRegisterFuture.future;
-}
-
-- (TOCFuture *)textSecureRegistrationFuture:(NSArray *)pushTokens {
-    TOCFutureSource *textsecureRegistration = [[TOCFutureSource alloc] init];
-
-    [TSAccountManager verifyAccountWithCode:[self validationCodeFromTextField]
-        pushToken:pushTokens[0]
-        voipToken:([pushTokens count] == 2) ? pushTokens.lastObject : nil
-        success:^{
-          [textsecureRegistration trySetResult:@YES];
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
+{
+    DDLogInfo(@"%@ preparing for CompletedRegistrationSeque", self.tag);
+    if ([segue.identifier isEqualToString:kCompletedRegistrationSegue]) {
+        if (![segue.destinationViewController isKindOfClass:[SignalsNavigationController class]]) {
+            DDLogError(@"%@ Unexpected destination view controller: %@", self.tag, segue.destinationViewController);
+            return;
         }
-        failure:^(NSError *error) {
-          [textsecureRegistration trySetFailure:error];
-        }];
 
-    return textsecureRegistration.future;
-}
-
-
-- (void)registerWithSuccess:(void (^)())success failure:(void (^)(NSError *))failure {
-    [_submitCodeSpinner startAnimating];
-
-    __block NSArray<NSString *> *pushTokens;
-
-    TOCFuture *tsRegistrationFuture = [[self pushRegistration] then:^id(NSArray<NSString *> *tokens) {
-      pushTokens = tokens;
-      return [self textSecureRegistrationFuture:pushTokens];
-    }];
-
-    TOCFuture *redphoneRegistrationFuture = [tsRegistrationFuture then:^id(id value) {
-      return [[self getRPRegistrationToken] then:^(NSString *registrationFuture) {
-        return [self redphoneRegistrationWithTSToken:registrationFuture
-                                           pushToken:pushTokens[0]
-                                           voipToken:([pushTokens count] == 2) ? pushTokens.lastObject : nil];
-      }];
-    }];
-
-    [redphoneRegistrationFuture thenDo:^(id value) {
-      success();
-    }];
-
-    [redphoneRegistrationFuture catchDo:^(NSError *error) {
-      failure(error);
-    }];
-}
-
-- (TOCFuture *)getRPRegistrationToken {
-    TOCFutureSource *redPhoneTokenFuture = [[TOCFutureSource alloc] init];
-
-    [TSAccountManager obtainRPRegistrationToken:^(NSString *rpRegistrationToken) {
-      [redPhoneTokenFuture trySetResult:rpRegistrationToken];
-    }
-        failure:^(NSError *error) {
-          [redPhoneTokenFuture trySetFailure:error];
-        }];
-
-    return redPhoneTokenFuture.future;
-}
-
-- (TOCFuture *)redphoneRegistrationWithTSToken:(NSString *)tsToken
-                                     pushToken:(NSString *)pushToken
-                                     voipToken:(NSString *)voipToken {
-    TOCFutureSource *rpRegistration = [[TOCFutureSource alloc] init];
-
-    [RPAccountManager registrationWithTsToken:tsToken
-        pushToken:pushToken
-        voipToken:voipToken
-        success:^{
-          [rpRegistration trySetResult:@YES];
+        SignalsNavigationController *snc = (SignalsNavigationController *)segue.destinationViewController;
+        if (![snc.topViewController isKindOfClass:[SignalsViewController class]]) {
+            DDLogError(@"%@ Unexpected top view controller: %@", self.tag, snc.topViewController);
+            return;
         }
-        failure:^(NSError *error) {
-          [rpRegistration trySetFailure:error];
-        }];
 
-    return rpRegistration.future;
+        DDLogDebug(@"%@ notifying signals view controller of new user.", self.tag);
+        SignalsViewController *signalsViewController = (SignalsViewController *)snc.topViewController;
+        signalsViewController.newlyRegisteredUser = YES;
+    }
 }
+
+//- (TOCFuture *)pushRegistration {
+//    TOCFutureSource *pushAndRegisterFuture = [[TOCFutureSource alloc] init];
+//
+//    [[PushManager sharedManager] validateUserNotificationSettings];
+//    [[PushManager sharedManager] requestPushTokenWithSuccess:^(NSString *pushToken, NSString *voipToken) {
+//      NSMutableArray *pushTokens = [NSMutableArray arrayWithObject:pushToken];
+//
+//      if (voipToken) {
+//          [pushTokens addObject:voipToken];
+//      }
+//
+//      [pushAndRegisterFuture trySetResult:pushTokens];
+//    }
+//        failure:^(NSError *error) {
+//          [pushAndRegisterFuture trySetFailure:error];
+//        }];
+//
+//    return pushAndRegisterFuture.future;
+//}
+
+//- (TOCFuture *)getRPRegistrationToken {
+//    TOCFutureSource *redPhoneTokenFuture = [[TOCFutureSource alloc] init];
+//
+//    [TSAccountManager obtainRPRegistrationToken:^(NSString *rpRegistrationToken) {
+//      [redPhoneTokenFuture trySetResult:rpRegistrationToken];
+//    }
+//        failure:^(NSError *error) {
+//          [redPhoneTokenFuture trySetFailure:error];
+//        }];
+//
+//    return redPhoneTokenFuture.future;
+//}
+//
+//- (TOCFuture *)redphoneRegistrationWithTSToken:(NSString *)tsToken
+//                                     pushToken:(NSString *)pushToken
+//                                     voipToken:(NSString *)voipToken {
+//    TOCFutureSource *rpRegistration = [[TOCFutureSource alloc] init];
+//
+//    [RPAccountManager registrationWithTsToken:tsToken
+//        pushToken:pushToken
+//        voipToken:voipToken
+//        success:^{
+//          [rpRegistration trySetResult:@YES];
+//        }
+//        failure:^(NSError *error) {
+//          [rpRegistration trySetFailure:error];
+//        }];
+//
+//    return rpRegistration.future;
+//}
 
 #pragma mark - Send codes again
 - (IBAction)sendCodeSMSAction:(id)sender {

@@ -1,0 +1,3 @@
+[submodule "Carthage"]
+	path = Carthage
+	url = git@github.com:michaelkirk/Signal-Carthage.git

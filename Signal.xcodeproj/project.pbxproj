@@ -31,6 +31,7 @@
 		45843D221D223BA10013E85A /* OWSContactsSearcherTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 45843D211D223BA10013E85A /* OWSContactsSearcherTest.m */; };
 		45855F371D9498A40084F340 /* OWSContactAvatarBuilder.m in Sources */ = {isa = PBXBuildFile; fileRef = 45855F361D9498A40084F340 /* OWSContactAvatarBuilder.m */; };
 		45855F381D9498A40084F340 /* OWSContactAvatarBuilder.m in Sources */ = {isa = PBXBuildFile; fileRef = 45855F361D9498A40084F340 /* OWSContactAvatarBuilder.m */; };
+		458967111DC117CC00E9DD21 /* PushTokensSyncJobTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 458967101DC117CC00E9DD21 /* PushTokensSyncJobTest.swift */; };
 		458E38311D6682450094BD24 /* OWSQRCodeScanningViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 458E38301D6682450094BD24 /* OWSQRCodeScanningViewController.m */; };
 		458E38341D66873D0094BD24 /* OWSLinkDeviceViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 458E38331D66873D0094BD24 /* OWSLinkDeviceViewController.m */; };
 		458E38371D668EBF0094BD24 /* OWSDeviceProvisioningURLParser.m in Sources */ = {isa = PBXBuildFile; fileRef = 458E38361D668EBF0094BD24 /* OWSDeviceProvisioningURLParser.m */; };
@@ -52,6 +53,8 @@
 		45C681C91D305C9E0050903A /* OWSDisplayedMessageCollectionViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 45C681C31D305C9E0050903A /* OWSDisplayedMessageCollectionViewCell.xib */; };
 		45CB2FA81CB7146C00E1B343 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 45CB2FA71CB7146C00E1B343 /* Launch Screen.storyboard */; };
 		45CD81A61DBFF8FC004C9430 /* Registration.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 45CD81A51DBFF8FC004C9430 /* Registration.storyboard */; };
+		45CD81EF1DC030E7004C9430 /* PushTokensSyncJob.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45CD81EE1DC030E7004C9430 /* PushTokensSyncJob.swift */; };
+		45CD81F21DC03A22004C9430 /* OWSLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 45CD81F11DC03A22004C9430 /* OWSLogger.m */; };
 		45EB32CF1D7465C900735B2E /* OWSLinkedDevicesTableViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 45EB32CE1D7465C900735B2E /* OWSLinkedDevicesTableViewController.m */; };
 		45F2B1941D9C9F48000D2C69 /* OWSOutgoingMessageCollectionViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 45F2B1931D9C9F48000D2C69 /* OWSOutgoingMessageCollectionViewCell.m */; };
 		45F2B1971D9CA207000D2C69 /* OWSIncomingMessageCollectionViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 45F2B1951D9CA207000D2C69 /* OWSIncomingMessageCollectionViewCell.xib */; };
@@ -561,6 +564,8 @@
 		45843D211D223BA10013E85A /* OWSContactsSearcherTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OWSContactsSearcherTest.m; sourceTree = "<group>"; };
 		45855F351D9498A40084F340 /* OWSContactAvatarBuilder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OWSContactAvatarBuilder.h; sourceTree = "<group>"; };
 		45855F361D9498A40084F340 /* OWSContactAvatarBuilder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OWSContactAvatarBuilder.m; sourceTree = "<group>"; };
+		4589670F1DC117CC00E9DD21 /* SignalTests-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "SignalTests-Bridging-Header.h"; sourceTree = "<group>"; };
+		458967101DC117CC00E9DD21 /* PushTokensSyncJobTest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PushTokensSyncJobTest.swift; path = Models/PushTokensSyncJobTest.swift; sourceTree = "<group>"; };
 		458E382F1D6682450094BD24 /* OWSQRCodeScanningViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OWSQRCodeScanningViewController.h; sourceTree = "<group>"; };
 		458E38301D6682450094BD24 /* OWSQRCodeScanningViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OWSQRCodeScanningViewController.m; sourceTree = "<group>"; };
 		458E38321D66873D0094BD24 /* OWSLinkDeviceViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OWSLinkDeviceViewController.h; sourceTree = "<group>"; };
@@ -587,6 +592,9 @@
 		45C681C31D305C9E0050903A /* OWSDisplayedMessageCollectionViewCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = OWSDisplayedMessageCollectionViewCell.xib; sourceTree = "<group>"; };
 		45CB2FA71CB7146C00E1B343 /* Launch Screen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = "Launch Screen.storyboard"; path = "Signal/src/util/Launch Screen.storyboard"; sourceTree = SOURCE_ROOT; };
 		45CD81A51DBFF8FC004C9430 /* Registration.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = Registration.storyboard; path = Storyboards/Registration.storyboard; sourceTree = "<group>"; };
+		45CD81EE1DC030E7004C9430 /* PushTokensSyncJob.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PushTokensSyncJob.swift; sourceTree = "<group>"; };
+		45CD81F01DC03A22004C9430 /* OWSLogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OWSLogger.h; sourceTree = "<group>"; };
+		45CD81F11DC03A22004C9430 /* OWSLogger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OWSLogger.m; sourceTree = "<group>"; };
 		45E282DE1D08E67800ADD4C8 /* gl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = gl; path = translations/gl.lproj/Localizable.strings; sourceTree = "<group>"; };
 		45E282DF1D08E6CC00ADD4C8 /* id */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = id; path = translations/id.lproj/Localizable.strings; sourceTree = "<group>"; };
 		45EB32CD1D7465C900735B2E /* OWSLinkedDevicesTableViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OWSLinkedDevicesTableViewController.h; sourceTree = "<group>"; };
@@ -1201,6 +1209,7 @@
 				45666EC51D99483D008FE134 /* OWSAvatarBuilder.m */,
 				45666EC71D994C0D008FE134 /* OWSGroupAvatarBuilder.h */,
 				45666EC81D994C0D008FE134 /* OWSGroupAvatarBuilder.m */,
+				45CD81EE1DC030E7004C9430 /* PushTokensSyncJob.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -1209,6 +1218,7 @@
 			isa = PBXGroup;
 			children = (
 				458E38391D6699FA0094BD24 /* OWSDeviceProvisioningURLParserTest.m */,
+				458967101DC117CC00E9DD21 /* PushTokensSyncJobTest.swift */,
 			);
 			name = Models;
 			sourceTree = "<group>";
@@ -1730,6 +1740,8 @@
 				B62F5E0F1C2980B4000D370C /* NSData+ows_StripToken.m */,
 				45666F541D9B2827008FE134 /* OWSScrubbingLogFormatter.h */,
 				45666F551D9B2827008FE134 /* OWSScrubbingLogFormatter.m */,
+				45CD81F01DC03A22004C9430 /* OWSLogger.h */,
+				45CD81F11DC03A22004C9430 /* OWSLogger.m */,
 			);
 			path = util;
 			sourceTree = "<group>";
@@ -1914,6 +1926,7 @@
 		B660F66C1C29867F00687D6E /* test */ = {
 			isa = PBXGroup;
 			children = (
+				4589670F1DC117CC00E9DD21 /* SignalTests-Bridging-Header.h */,
 				458E38381D6699110094BD24 /* Models */,
 				459C3F0E1C9B3A20003ACF51 /* TSMessageAdapters */,
 				B660F66D1C29867F00687D6E /* audio */,
@@ -2474,6 +2487,7 @@
 					};
 					D221A0A9169C9E5F00537ABF = {
 						DevelopmentTeam = U68MSDN6DR;
+						LastSwiftMigration = 0800;
 						TestTargetID = D221A088169C9E5E00537ABF;
 					};
 				};
@@ -2741,6 +2755,7 @@
 				76EB062418170B33006006FC /* PriorityQueue.m in Sources */,
 				B6BADBE71B88D1AC0086A80D /* LockInteractionController.m in Sources */,
 				76EB061A18170B33006006FC /* DiscardingLog.m in Sources */,
+				45CD81F21DC03A22004C9430 /* OWSLogger.m in Sources */,
 				76EB05AC18170B33006006FC /* SrtpSocket.m in Sources */,
 				FCB11D931A12A4AA002F93FB /* FullImageViewController.m in Sources */,
 				B60C16651988999D00E97A6C /* VersionMigrations.m in Sources */,
@@ -2752,6 +2767,7 @@
 				E197B61818BBEC1A00F073E5 /* RemoteIOAudio.m in Sources */,
 				B67ADDC41989FF8700E1A773 /* RPServerRequestsManager.m in Sources */,
 				76EB059418170B33006006FC /* HttpManager.m in Sources */,
+				45CD81EF1DC030E7004C9430 /* PushTokensSyncJob.swift in Sources */,
 				76EB05EC18170B33006006FC /* CallState.m in Sources */,
 				76EB05D218170B33006006FC /* ZrtpInitiator.m in Sources */,
 				76EB05E018170B33006006FC /* NetworkStream.m in Sources */,
@@ -2968,6 +2984,7 @@
 				B660F7231C29988E00687D6E /* DnsManager.m in Sources */,
 				B660F7241C29988E00687D6E /* HostNameEndPoint.m in Sources */,
 				B660F7251C29988E00687D6E /* IgnoredPacketFailure.m in Sources */,
+				458967111DC117CC00E9DD21 /* PushTokensSyncJobTest.swift in Sources */,
 				B660F7261C29988E00687D6E /* UnrecognizedRequestFailure.m in Sources */,
 				B660F7271C29988E00687D6E /* RPAPICall.m in Sources */,
 				B660F7281C29988E00687D6E /* RPServerRequestsManager.m in Sources */,
@@ -3434,6 +3451,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Signal.app/Signal";
 				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				DEFINES_MODULE = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -3463,6 +3481,7 @@
 				);
 				INFOPLIST_FILE = "Signal/test/Supporting Files/SignalTests-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)",
@@ -3475,6 +3494,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "org.whispersystems.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = SignalTests;
 				PROVISIONING_PROFILE = "";
+				SWIFT_OBJC_BRIDGING_HEADER = "Signal/test/SignalTests-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 3.0;
 				TEST_HOST = "$(BUNDLE_LOADER)";
 				VALID_ARCHS = "arm64 armv7s armv7 i386 x86_64";
 			};
@@ -3487,6 +3509,7 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Signal.app/Signal";
 				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = YES;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				DEFINES_MODULE = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -3516,6 +3539,7 @@
 				);
 				INFOPLIST_FILE = "Signal/test/Supporting Files/SignalTests-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SRCROOT)",
@@ -3528,6 +3552,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "org.whispersystems.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = SignalTests;
 				PROVISIONING_PROFILE = "c15eac58-5aa7-4660-b874-b9f7ed3dab70";
+				SWIFT_OBJC_BRIDGING_HEADER = "Signal/test/SignalTests-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 3.0;
 				TEST_HOST = "$(BUNDLE_LOADER)";
 				VALID_ARCHS = "arm64 armv7s armv7 i386 x86_64";
 			};

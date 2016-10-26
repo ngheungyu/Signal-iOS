@@ -14,6 +14,9 @@
 #import "NSDate+millisecondTimeStamp.h"
 #import "OWSContactsManager.h"
 #import "PreferencesUtil.h"
+#import "PushManager.h"
+#import "RPAccountManager.h"
+#import "Signal-Swift.h"
 #import "SignalsViewController.h"
 #import "TSAccountManager.h"
 #import "TSDatabaseView.h"
@@ -186,7 +189,7 @@
     }
 }
 
-- (void)didAppearForNewlyRegisteredUser
+- (void)promptNewUserForContactsWithCompletion:(void (^)())completionHandler
 {
     ABAuthorizationStatus status = ABAddressBookGetAuthorizationStatus();
     switch (status) {
@@ -205,14 +208,81 @@
                                           [[Environment getCurrent].contactsManager doAfterEnvironmentInitSetup];
                                       }]];
 
-            [self presentViewController:controller animated:YES completion:nil];
+            [self presentViewController:controller animated:YES completion:completionHandler];
             break;
         }
         default: {
+            DDLogError(@"%@ Unexpected for new user to have kABAuthorizationStatus:%ld", self.tag, status);
             [[Environment getCurrent].contactsManager doAfterEnvironmentInitSetup];
+            completionHandler();
             break;
         }
     }
+}
+
+- (void)ensureNotificationsUpToDate
+{
+    [OWSPushTokensSyncJob runWithPushManager:[PushManager sharedManager]
+                                tokenStorage:[Environment preferences]
+                    textSecureAccountManager:[TSAccountManager sharedInstance]
+                      redPhoneAccountManager:[RPAccountManager sharedInstance]];
+
+
+    //
+    //
+    //        [RPAccountManager registrationWithTsToken:tsToken
+    //                                        pushToken:pushToken
+    //                                        voipToken:voipToken
+    //                                          success:^{
+    //                                              [rpRegistration trySetResult:@YES];
+    //                                          }
+    //                                          failure:^(NSError *error) {
+    //                                              [rpRegistration trySetFailure:error];
+    //                                          }];
+    //
+    //
+    //
+    //        //    [TSAccountManager obtainRPRegistrationToken:^(NSString *rpRegistrationToken) {
+    //        //      [redPhoneTokenFuture trySetResult:rpRegistrationToken];
+    //        //    }
+    //        //        failure:^(NSError *error) {
+    //        //          [redPhoneTokenFuture trySetFailure:error];
+    //        //        }];
+    //        //
+    //        //    return redPhoneTokenFuture.future;
+    //        //}
+    //        //
+    //        //- (TOCFuture *)redphoneRegistrationWithTSToken:(NSString *)tsToken
+    //        //                                     pushToken:(NSString *)pushToken
+    //        //                                     voipToken:(NSString *)voipToken {
+    //        //    TOCFutureSource *rpRegistration = [[TOCFutureSource alloc] init];
+    //        //
+    //        //    [RPAccountManager registrationWithTsToken:tsToken
+    //        //        pushToken:pushToken
+    //        //        voipToken:voipToken
+    //        //        success:^{
+    //        //          [rpRegistration trySetResult:@YES];
+    //        //        }
+    //        //        failure:^(NSError *error) {
+    //        //          [rpRegistration trySetFailure:error];
+    //        //        }];
+    //
+    //
+    //        // update text-secure
+    //        //if already redphone-registered
+    //            // update redphone
+    //        // else
+    //            // register for redphone
+    //    } failure:^(NSError *error) {
+    //        DDLogError(@"Error registering for push notifications.");
+    //    }];
+}
+
+- (void)didAppearForNewlyRegisteredUser
+{
+    [self promptNewUserForContactsWithCompletion:^{
+        [self ensureNotificationsUpToDate];
+    }];
 }
 
 - (void)tableViewSetUp {
@@ -590,6 +660,18 @@
                             value:[UIColor ows_darkGrayColor]
                             range:NSMakeRange(firstLine.length + 1, secondLine.length)];
     _emptyBoxLabel.attributedText = fullLabelString;
+}
+
+#pragma mark - Logging
+
++ (NSString *)tag
+{
+    return [NSString stringWithFormat:@"[%@]", self.class];
+}
+
+- (NSString *)tag
+{
+    return self.class.tag;
 }
 
 @end

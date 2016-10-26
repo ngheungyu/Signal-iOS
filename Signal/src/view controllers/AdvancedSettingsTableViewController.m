@@ -115,16 +115,19 @@
           SignalAlertView(NSLocalizedString(@"PUSH_REGISTER_TITLE", nil), NSLocalizedString(@"REGISTRATION_BODY", nil));
         };
 
-        [[PushManager sharedManager] requestPushTokenWithSuccess:^(NSString *pushToken, NSString *voipToken) {
-          [TSAccountManager registerForPushNotifications:pushToken
-                                               voipToken:voipToken
-                                                 success:^{
-                                                   SignalAlertView(NSLocalizedString(@"PUSH_REGISTER_TITLE", nil),
-                                                                   NSLocalizedString(@"PUSH_REGISTER_SUCCESS", nil));
-                                                 }
-                                                 failure:failure];
-        }
-                                                         failure:failure];
+        // FIXME use syncer.
+        //        [[PushManager sharedManager] requestPushTokenWithSuccess:^(NSString *pushToken, NSString *voipToken) {
+        //          [TSAccountManager registerForPushNotifications:pushToken
+        //                                               voipToken:voipToken
+        //                                                 success:^{
+        //                                                   SignalAlertView(NSLocalizedString(@"PUSH_REGISTER_TITLE",
+        //                                                   nil),
+        //                                                                   NSLocalizedString(@"PUSH_REGISTER_SUCCESS",
+        //                                                                   nil));
+        //                                                 }
+        //                                                 failure:failure];
+        //        }
+        //                                                         failure:failure];
     }
 }
 

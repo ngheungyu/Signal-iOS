@@ -9,8 +9,9 @@
 #import "OWSStaleNotificationObserver.h"
 #import "PreferencesUtil.h"
 #import "PushManager.h"
+#import "RPAccountManager.h"
 #import "Release.h"
-#import "TSAccountManager.h"
+#import "Signal-Swift.h"
 #import "TSMessagesManager.h"
 #import "TSPreKeyManager.h"
 #import "TSSocketManager.h"
@@ -20,6 +21,7 @@
 #import <SignalServiceKit/OWSDisappearingMessagesJob.h>
 #import <SignalServiceKit/OWSIncomingMessageReadObserver.h>
 #import <SignalServiceKit/OWSMessageSender.h>
+#import <SignalServiceKit/TSAccountManager.h>
 
 static NSString *const AppDelegateStoryboardMain = @"Main";
 static NSString *const AppDelegateStoryboardRegistration = @"Registration";
@@ -119,7 +121,11 @@ static NSString *const kURLHostVerifyPrefix             = @"verify";
             DDLogWarn(@"The app was launched in an unknown way");
         }
 
-        [[PushManager sharedManager] validateUserNotificationSettings];
+        [OWSPushTokensSyncJob runWithPushManager:[PushManager sharedManager]
+                                    tokenStorage:[Environment preferences]
+                        textSecureAccountManager:[TSAccountManager sharedInstance]
+                          redPhoneAccountManager:[RPAccountManager sharedInstance]];
+
         [TSPreKeyManager refreshPreKeys];
 
         // Clean up any messages that expired since last launch.

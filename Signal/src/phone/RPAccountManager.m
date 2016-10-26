@@ -15,6 +15,8 @@
 #import "RPServerRequestsManager.h"
 #import "SignalKeyingStorage.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface RedPhoneAccountAttributes : MTLModel
 
 @property (nonatomic, copy, readonly) NSString *signalingKey;
@@ -61,7 +63,18 @@
 
 @implementation RPAccountManager
 
-+ (void)generateKeyingMaterial {
++ (instancetype)sharedInstance
+{
+    static dispatch_once_t onceToken;
+    static RPAccountManager *sharedInstance;
+    dispatch_once(&onceToken, ^{
+        sharedInstance = [self new];
+    });
+    return sharedInstance;
+}
+
+- (void)generateKeyingMaterial
+{
     [SignalKeyingStorage generateServerAuthPassword];
     [SignalKeyingStorage generateSignaling];
 }
@@ -80,21 +93,23 @@
         .dictionaryValue;
 }
 
-+ (void)registrationWithTsToken:(NSString *)tsToken
-                      pushToken:(NSString *)pushToken
-                      voipToken:(NSString *)voipPushToken
-                        success:(void (^)())success
-                        failure:(void (^)(NSError *))failure {
+- (void)registerWithTsToken:(NSString *)tsToken
+                  pushToken:(NSString *)pushToken
+                  voipToken:(NSString *)voipPushToken
+                    success:(void (^)())success
+                    failure:(void (^)(NSError *))failure
+{
     [self generateKeyingMaterial];
 
     [[RPServerRequestsManager sharedManager]
         performRequest:[RPAPICall verifyWithTSToken:tsToken
-                               attributesParameters:[self attributesWithPushToken:pushToken voipToken:voipPushToken]]
+                               attributesParameters:[[self class] attributesWithPushToken:pushToken
+                                                                                voipToken:voipPushToken]]
         success:^(NSURLSessionDataTask *task, id responseObject) {
-          success();
+            success();
         }
         failure:^(NSURLSessionDataTask *task, NSError *error) {
-          failure(error);
+            failure(error);
         }];
 }
 
@@ -102,3 +117,5 @@
 }
 
 @end
+
+NS_ASSUME_NONNULL_END

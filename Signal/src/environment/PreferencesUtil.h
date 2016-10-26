@@ -47,4 +47,12 @@ typedef NS_ENUM(NSUInteger, TSImageQuality) {
 - (NSString *)lastRanVersion;
 - (NSString *)setAndGetCurrentVersion;
 
+#pragma mark - Push Tokens
+
+- (void)setPushToken:(NSString *)value;
+- (NSString *)getPushToken;
+
+- (void)setVoipToken:(NSString *)value;
+- (NSString *)getVoipToken;
+
 @end

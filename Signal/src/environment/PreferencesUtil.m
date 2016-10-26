@@ -12,6 +12,9 @@
 #define PLAY_SOUND_IN_FOREGROUND_KEY @"NotificationSoundInForeground"
 #define HAS_REGISTERED_VOIP_PUSH @"VOIPPushEnabled"
 
+NSString *const PreferencesUtilKeyPushToken = @"PreferencesUtilKeyPushToken";
+NSString *const PreferencesUtilKeyVoipToken = @"PreferencesUtilKeyVoipToken";
+
 @implementation PropertyListPreferences (PropertyUtil)
 
 - (NSTimeInterval)getCachedOrDefaultDesiredBufferDepth {
@@ -147,6 +150,28 @@
             DDLogWarn(@"Undefined NotificationType in Settings");
             return @"";
     }
+}
+
+#pragma mark - Push Tokens
+
+- (void)setPushToken:(NSString *)value
+{
+    [self setValueForKey:PreferencesUtilKeyPushToken toValue:value];
+}
+
+- (NSString *)getPushToken
+{
+    return [self tryGetValueForKey:PreferencesUtilKeyPushToken];
+}
+
+- (void)setVoipToken:(NSString *)value
+{
+    [self setValueForKey:PreferencesUtilKeyVoipToken toValue:value];
+}
+
+- (NSString *)getVoipToken
+{
+    return [self tryGetValueForKey:PreferencesUtilKeyVoipToken];
 }
 
 @end
